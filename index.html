@@ -1,0 +1,141 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text File to Dictionary Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            text-align: center;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+        button, label {
+            margin-top: 10px;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .toggle-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Text File to Dictionary Converter</h1>
+        <p>Upload a .txt file with data in the format "word [pronunciation] translation".</p>
+        <input type="file" id="fileInput" accept=".txt">
+
+        <div class="toggle-container">
+            <label>
+                <input type="checkbox" id="orderToggle">
+                Switch output order ("translation", "word")
+            </label>
+        </div>
+
+        <textarea id="output" readonly placeholder="The result of the conversion will appear here..."></textarea>
+        <button id="copyButton">Copy result</button>
+    </div>
+
+    <script>
+        let isTranslationFirst = false;
+
+        // Обработчик для переключения порядка вывода
+        document.getElementById('orderToggle').addEventListener('change', function(event) {
+            isTranslationFirst = event.target.checked;
+        });
+
+        // Обработчик для загрузки файла
+        document.getElementById('fileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+
+            if (!file) {
+                alert('Please select a file.');
+                return;
+            }
+
+            if (!file.name.endsWith('.txt')) {
+                alert('Please upload the .txt file');
+                return;
+            }
+
+            const reader = new FileReader();
+
+            // Чтение файла
+            reader.onload = function(e) {
+                try {
+                    const text = e.target.result;
+                    const transformed = transformText(text);
+                    document.getElementById('output').value = transformed;
+                } catch (error) {
+                    alert('An error occurred while processing the file. Check its contents.');
+                }
+            };
+
+            reader.onerror = function() {
+                alert('Error reading file. Please try again.');
+            };
+
+            reader.readAsText(file);
+        });
+
+        // Функция преобразования текста
+        function transformText(text) {
+            // Разбиваем текст на записи по шаблону "слово/выражение [произношение] перевод"
+            const entries = text.match(/([a-z\-\s']+\s*\[.*?\]\s*[^a-z\-\[]+)/gi) || [];
+            const result = entries.map(entry => parseEntry(entry.trim()));
+
+            return `[
+${result.filter(Boolean).join(',\n')}
+]`;
+        }
+
+        // Функция парсинга одной записи
+        function parseEntry(entry) {
+            const match = entry.match(/^([a-z\-\s']+)\s*\[.*?\]\s*(.+)$/i);
+            if (match) {
+                const englishPhrase = match[1].toLowerCase().trim();
+                const russianTranslation = match[2]
+                    .replace(/\s+/g, ' ') // Убираем лишние пробелы
+                    .replace(/-\s+/g, '') // Убираем разрывы в русских словах
+                    .replace(/;\s*/g, ', '); // Заменяем точки с запятой на запятые
+
+                if (isTranslationFirst) {
+                    return `  ["${russianTranslation}", "${englishPhrase}"]`;
+                } else {
+                    return `  ["${englishPhrase}", "${russianTranslation}"]`;
+                }
+            }
+            return null;
+        }
+
+        // Обработчик для копирования результата
+        document.getElementById('copyButton').addEventListener('click', function() {
+            const output = document.getElementById('output');
+            if (output.value.trim() === '') {
+                alert('The result is empty. First download and process the file.');
+                return;
+            }
+
+            output.select();
+            document.execCommand('copy');
+            alert('The result has been copied to the clipboard!');
+        });
+    </script>
+</body>
+</html>
