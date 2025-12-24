@@ -1,4 +1,4 @@
-Text File to Dictionary Converter 📘
+Text File to Dictionary Converter
 A simple client-side web tool that converts structured .txt vocabulary files into a JavaScript-style dictionary (array of word–translation pairs). The tool runs entirely in the browser — no backend, no uploads, and no dependencies.
 ________________________________________
 Features
@@ -45,7 +45,7 @@ How to Use
 4.	(Optional) Toggle output order
 5.	Copy the generated result to your clipboard
 ________________________________________
-🛠️ Technical Overview
+Technical Overview
 •	HTML + CSS for layout and styling
 •	Vanilla JavaScript
 •	Uses:
